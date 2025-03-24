@@ -1,0 +1,211 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sequence Rename Tool</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #2c2c2c;
+            color: #f1f1f1;
+        }
+
+        .container {
+            max-width: 1500px;
+            margin: 20px auto;
+            background: #333;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        h1 {
+            text-align: center;
+            color: #66ff99;
+        }
+
+        .options {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .options label {
+            color: #66ff99;
+            font-size: 1rem;
+            margin-right: 10px;
+        }
+
+        input[type="file"], input[type="text"], input[type="number"] {
+            padding: 8px;
+            border: 2px solid #66ff99;
+            border-radius: 5px;
+            background: #444;
+            color: #f1f1f1;
+        }
+
+        .buttons {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1rem;
+            border: none;
+            border-radius: 5px;
+            background-color: #66ff99;
+            color: #333;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+        }
+
+        button:hover {
+            background-color: #55cc88;
+            transform: scale(1.05);
+        }
+
+        button.error {
+            background-color: #ff6666;
+        }
+
+        .file-list {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            background: #444;
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .file-list div {
+            width: 48%;
+            background: #222;
+            padding: 10px;
+            border-radius: 5px;
+            overflow-y: auto;
+            max-height: 600px;
+        }
+
+        .file-list div h3 {
+            color: #66ff99;
+            font-size: 1rem;
+            margin-bottom: 10px;
+        }
+
+        .file-list div p {
+            font-size: 0.9rem;
+            color: #f1f1f1;
+            margin: 2px 0;
+        }
+
+        .file-list div p.error {
+            color: #ff6666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Sequence Rename Tool</h1>
+
+        <div class="options">
+            <div>
+                <label for="fileInput">Choose files</label>
+                <input type="file" id="fileInput" multiple accept="image/*">
+            </div>
+            <div>
+                <label for="baseName">Desired name</label>
+                <input type="text" id="baseName" value="_n_">
+            </div>
+            <div>
+                <label for="startNumber">Initial frame</label>
+                <input type="number" id="startNumber" value="1" min="0">
+            </div>
+        </div>
+
+        <div class="buttons">
+            <button id="renameButton" onclick="renameFiles()">Start renaming</button>
+            <button id="downloadButton" disabled>Download ZIP</button>
+        </div>
+
+        <div class="file-list">
+            <div>
+                <h3>Original_Sequence</h3>
+                <div id="originalList"></div>
+            </div>
+            <div>
+                <h3>Renamed_Sequence</h3>
+                <div id="renamedList"></div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
+    <script>
+        async function renameFiles() {
+            const fileInput = document.getElementById('fileInput');
+            const baseName = document.getElementById('baseName').value;
+            const startNumber = parseInt(document.getElementById('startNumber').value, 10);
+            const renameButton = document.getElementById('renameButton');
+            const downloadButton = document.getElementById('downloadButton');
+            const originalList = document.getElementById('originalList');
+            const renamedList = document.getElementById('renamedList');
+
+            renameButton.classList.remove('error');
+
+            if (!fileInput.files.length || !baseName.trim()) {
+                renameButton.classList.add('error');
+                return;
+            }
+
+            originalList.innerHTML = '';
+            renamedList.innerHTML = '';
+
+            const files = Array.from(fileInput.files);
+            const zip = new JSZip();
+            let counter = startNumber;
+
+            for (const file of files) {
+                const originalExtension = file.name.split('.').pop();
+                const formattedCounter = String(counter).padStart(1, '0');
+
+                // Replace "n" with the sequence number
+                let newName;
+                if (baseName.includes("n")) {
+                    newName = baseName.replace("n", formattedCounter);
+                } else {
+                    newName = `${baseName}_${formattedCounter}`;
+                }
+
+                newName = `${newName}.${originalExtension}`;
+                zip.file(newName, file);
+
+                const originalEntry = document.createElement('p');
+                originalEntry.textContent = file.name;
+                originalList.appendChild(originalEntry);
+
+                const renamedEntry = document.createElement('p');
+                renamedEntry.textContent = newName;
+                renamedList.appendChild(renamedEntry);
+
+                counter++;
+            }
+
+            const zipBlob = await zip.generateAsync({ type: 'blob' });
+            const zipUrl = URL.createObjectURL(zipBlob);
+
+            downloadButton.disabled = false;
+            downloadButton.onclick = () => {
+                const a = document.createElement('a');
+                a.href = zipUrl;
+                a.download = 'renamed_files.zip';
+                a.click();
+            };
+        }
+    </script>
+</body>
+</html>
