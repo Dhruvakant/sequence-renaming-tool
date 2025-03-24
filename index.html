@@ -176,10 +176,14 @@
                 // Replace "_n_" with the sequence number
                 let newName;
                 if (baseName.includes("_n_")) {
-                    newName = baseName.replace("_n_", `_${formattedCounter}_`);
+                    if (baseName.endsWith("_n_")) {
+                    newName = baseName.replace("_n_", `_${formattedCounter}`);
                 } else {
-                    newName = `${baseName}_${formattedCounter}_`;
+                    newName = baseName.replace("_n_", `_${formattedCounter}_`);
                 }
+            } else {
+                newName = `${baseName}_${formattedCounter}`;
+            }
 
                 newName = `${newName}.${originalExtension}`;
                 zip.file(newName, file);
