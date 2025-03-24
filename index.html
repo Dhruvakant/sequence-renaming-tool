@@ -173,12 +173,12 @@
                 const originalExtension = file.name.split('.').pop();
                 const formattedCounter = String(counter).padStart(1, '0');
 
-                // Replace "n" with the sequence number
+                // Replace "_n_" with the sequence number
                 let newName;
-                if (baseName.includes("n")) {
-                    newName = baseName.replace("n", formattedCounter);
+                if (baseName.includes("_n_")) {
+                    newName = baseName.replace("_n_", `_${formattedCounter}_`);
                 } else {
-                    newName = `${baseName}_${formattedCounter}`;
+                    newName = `${baseName}_${formattedCounter}_`;
                 }
 
                 newName = `${newName}.${originalExtension}`;
