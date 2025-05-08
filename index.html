@@ -40,7 +40,7 @@
             margin-right: 10px;
         }
 
-        input[type="file"], input[type="text"], input[type="number"] {
+        input[type="file"], input[type="text"], input[type="number"], select {
             padding: 8px;
             border: 2px solid #66ff99;
             border-radius: 5px;
@@ -65,7 +65,7 @@
         }
 
         button:hover {
-            background-color: #55cc88;
+            background-color: #4dd688;
             transform: scale(1.05);
         }
 
@@ -106,6 +106,30 @@
         .file-list div p.error {
             color: #ff6666;
         }
+
+        .loader {
+            display: none;
+            margin: 20px auto;
+            border: 4px solid #444;
+            border-radius: 50%;
+            border-top: 4px solid #66ff99;
+            width: 50px;
+            height: 50px;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .status-message {
+            text-align: center;
+            color: #f0d228;
+            margin: 20px 0;
+            display: none;
+            font-size: 1.2rem;
+        }
     </style>
 </head>
 <body>
@@ -125,12 +149,32 @@
                 <label for="startNumber">Initial frame</label>
                 <input type="number" id="startNumber" value="1" min="0">
             </div>
+            <div>
+                <label for="extension">Extension</label>
+                <select id="extension">
+                    <option value="exr">.exr</option>
+                    <option value="png">.png</option>
+                    <option value="jpeg">.jpeg</option>
+                    <option value="jpg">.jpg</option>
+                    <option value="tiff">.tiff</option>
+                    <option value="tga">.tga</option>
+                    <option value="targa">.targa</option>
+                </select>
+            </div>
+            <div>
+                <label for="digitCount">Digits</label>
+                <input type="number" id="digitCount" value="1" min="1" placeholder="Number of digits">
+            </div>
         </div>
 
         <div class="buttons">
             <button id="renameButton" onclick="renameFiles()">Start renaming</button>
             <button id="downloadButton" disabled>Download ZIP</button>
         </div>
+
+        <div class="loader" id="loader"></div>
+
+        <div class="status-message" id="statusMessage">Renaming completed. You can now download the ZIP.</div>
 
         <div class="file-list">
             <div>
@@ -145,71 +189,6 @@
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
-    <script>
-        async function renameFiles() {
-            const fileInput = document.getElementById('fileInput');
-            const baseName = document.getElementById('baseName').value;
-            const startNumber = parseInt(document.getElementById('startNumber').value, 10);
-            const renameButton = document.getElementById('renameButton');
-            const downloadButton = document.getElementById('downloadButton');
-            const originalList = document.getElementById('originalList');
-            const renamedList = document.getElementById('renamedList');
-
-            renameButton.classList.remove('error');
-
-            if (!fileInput.files.length || !baseName.trim()) {
-                renameButton.classList.add('error');
-                return;
-            }
-
-            originalList.innerHTML = '';
-            renamedList.innerHTML = '';
-
-            const files = Array.from(fileInput.files);
-            const zip = new JSZip();
-            let counter = startNumber;
-
-            for (const file of files) {
-                const originalExtension = file.name.split('.').pop();
-                const formattedCounter = String(counter).padStart(1, '0');
-
-                // Replace "_n_" with the sequence number
-                let newName;
-                if (baseName.includes("_n_")) {
-                    if (baseName.endsWith("_n_")) {
-                    newName = baseName.replace("_n_", `_${formattedCounter}`);
-                } else {
-                    newName = baseName.replace("_n_", `_${formattedCounter}_`);
-                }
-            } else {
-                newName = `${baseName}_${formattedCounter}`;
-            }
-
-                newName = `${newName}.${originalExtension}`;
-                zip.file(newName, file);
-
-                const originalEntry = document.createElement('p');
-                originalEntry.textContent = file.name;
-                originalList.appendChild(originalEntry);
-
-                const renamedEntry = document.createElement('p');
-                renamedEntry.textContent = newName;
-                renamedList.appendChild(renamedEntry);
-
-                counter++;
-            }
-
-            const zipBlob = await zip.generateAsync({ type: 'blob' });
-            const zipUrl = URL.createObjectURL(zipBlob);
-
-            downloadButton.disabled = false;
-            downloadButton.onclick = () => {
-                const a = document.createElement('a');
-                a.href = zipUrl;
-                a.download = 'renamed_files.zip';
-                a.click();
-            };
-        }
-    </script>
+    <script src="./script.js"></script>
 </body>
 </html>
